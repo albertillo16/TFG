@@ -1,0 +1,26 @@
+import sys
+from PyQt5 import uic
+from PyQt5.QtWidgets import QMainWindow, QApplication
+
+
+class Programarespirador(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        uic.loadUi("Inicio.ui", self)
+        self.Boton_Inicio.clicked.connect(self.Ventana_principal)
+
+    def Ventana_principal(self):
+        uic.loadUi("Ventilador.ui", self)
+        self.Boton_Ajustes.clicked.connect(self.Abrir_parametros)
+
+    def Abrir_parametros(self):
+        self.Ajustesrespirador = uic.loadUi("Ajuste_total.ui", self)
+        self.Boton_Pag_Anterior.clicked.connect(self.Ventana_principal)
+        self.Ajustesrespirador.show()
+
+
+if __name__ == '__main__':
+    App = QApplication(sys.argv)
+    GUI = Programarespirador()
+    GUI.show()
+    sys.exit(App.exec_())
