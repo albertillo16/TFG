@@ -1,0 +1,180 @@
+
+from tkinter import *
+
+
+def Guardar_valor_Frecuencia_respiratoria():
+
+    Mostrar_FR = Label(Ventana_principal, font=("Arial", 12),
+                       text="FR\t: " + str(Variable_FR.get())).place(x=50, y=670)
+
+def Guardar_valor_tiempo_inspiracion():
+    Mostrar_Ti = Label(Ventana_principal, font=("Arial", 12),
+                       text="Ti\t: " + str(Variable_Ti.get())).place(x=50, y=690)
+
+def Guardar_valor_presion_paciente():
+    Mostrar_paciente=Label(Ventana_principal, font=("Arial", 12),
+                           text="Pinsp\t" + str(Variable_Presion.get())).place(x=50, y=710)
+
+def Guardar_valor_PEEP():
+    Mostrar_PEEP = Label(Ventana_principal, font=("Arial", 12),
+                         text="PEEP\t: " + str(Variable_PEEP.get())).place(x=50, y=730)
+
+def Guardar_Valor_flujo_maximo():
+    Mostrar_flujo_maximo = Label(Ventana_principal, font=("Arial", 12),
+                                 text="Alarma flujo máximo\t: " + str(Variable_flujo_maximo.get())).place(x=1000, y=100)
+
+def Guardar_Valor_flujo_minimo():
+    Mostrar_flujo_minimo = Label(Ventana_principal, font=("Arial", 12),
+                                 text="Alarma flujo mínimo\t: " + str(Variable_flujo_minimo.get())).place(x=1000, y=200)
+
+def Guardar_Valor_Presion_alarma():
+    Mostrar_Presion_maximo = Label(Ventana_principal, font=("Arial", 12),
+                                   text="Alarma Paw(mmBar)\t: " + str(Variable_Presion_Alarma.get())).place(x=1000,
+                                                                                                            y=300)
+def Guardar_valor_Frecuencia_respiratoria_alarma():
+    Mostrar_Frecuencia_respiratoria_alarma = Label(Ventana_principal, font=("Arial", 12),
+                                                   text="Alarma Frecuencia respiratoria\t: " + str(Variable_alarma_FR.get())).place(x=1000, y=200)
+
+def Guardar_valor_Volumen_maximo_alarma():
+    Mostrar_Volumen_Maximo = Label(Ventana_principal, font=("Arial", 12),
+                                   text="VT (mL) Máximo\t: " + str(Variable_flujo_maximo.get())).place(x=1000, y=200)
+def Guardar_valor_Volumen_minimo_alarma():
+    Mostrar_Volumen_Minimo = Label(Ventana_principal, font=("Arial", 12),
+                                   text="VT (mL) Mínimo\t: " + str(Variable_flujo_minimo.get())).place(x=1000, y=200)
+
+def Guardar_valor_Volumen_CO2_maximo():
+    Mostrar_Volumen_CO2_Maximo = Label(Ventana_principal, font=("Arial", 12),
+                                       text= "CO2 (Vol%) Máximo\t: "+ str(Variable_alarma_Volumen_CO2_maximo.get())).place(x=500, y=900)
+
+def Guardar_valor_Volumen_CO2_minimo():
+    Mostrar_Volumen_CO2_Minimo = Label(Ventana_principal, font=("Arial, 12"),
+                                       text="CO2 (Vol%) Mínimo\t: " + str(Variable_alarma_Volumen_CO2_minimo.get())).place(x=500, y=900)
+
+def Parametros_respirador():
+
+    Ajustes_parametros = Toplevel()
+    Ajustes_parametros.geometry("2048x800")
+    Ajustes_parametros.title("Ajustes del ventilador")
+
+    '''------ Parametros a configurar-----------'''
+    '''----- Frecuencia respiratoria -------'''
+    Deslizar_Frecencia_respiratoria = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=10, to=30,
+                                            length=300, resolution=1, label="Frecuencia respiratoria", font=("Arial", 12),
+                                            variable=Variable_FR).place(x=800, y=350)
+    Boton_FR = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
+                      command=Guardar_valor_Frecuencia_respiratoria).place(x=900, y=450)
+
+    '''------ Tiempo de inspiración ------'''
+    Deslizar_Tiempo_Inspiracion = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=0.2, to=2.5, length=350,
+                                        resolution=0.1, label="Tiempo inspiración", font=("Arial", 12),
+                                        variable=Variable_Ti).place(x=1200, y=350)
+    Boton_Ti = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
+                      command=Guardar_valor_tiempo_inspiracion).place(x=1300, y=450)
+
+    ''' ----- Presión paciente ------'''
+    Deslizar_presion_paciente=Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=6, to=29, length=350,
+                                    resolution=1, label="Presion inspiratoria", font=("Arial", 12),
+                                    variable=Variable_Presion).place(x=1200, y=550)
+    Boton_presion_paciente=Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
+                                  command=Guardar_valor_presion_paciente).place(x=1300, y=650)
+
+    ''' ---- PEEP ------ '''
+    Deslizar_PEEP = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=0, to=20, length=350,
+                          resolution=1, label="PEEP cmH2O", font=("Arial", 12),
+                          variable=Variable_PEEP).place(x=800, y=550)
+    Boton_PEEP = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
+                        command=Guardar_valor_PEEP).place(x=900, y=650)
+
+    Ajustes_parametros.mainloop()
+
+'''-------------- PARAMETROS DE ALARMAS DEL VENTILADOR ----------------------------'''
+
+def Parametros_alarmas():
+
+    Ajustes_alarmas = Toplevel()
+    Ajustes_alarmas.geometry("2018x800")
+    Ajustes_alarmas.title("Alarmas")
+
+    '''Parametros a configurar de alarmas'''
+    '''Flujo maximo y minimo'''
+
+    Deslizar_Flujo_Maximo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=26.6,
+                                resolution=0.1, label="L/min Máximo", font=("Arial", 12),
+                                variable=Variable_flujo_maximo).place(x=800, y=550)
+    Boton_Flujo_Maximo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                              command=Guardar_Valor_flujo_maximo).place(x=900, y=650)
+    Deslizar_Flujo_Minimo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=30,
+                                resolution=1, label="L/min Mínimo", font=("Arial", 12),
+                                variable=Variable_flujo_minimo).place(x=100, y=550)
+    Boton_Flujo_Minimo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                              command=Guardar_Valor_flujo_minimo).place(x=100, y=650)
+    '''------  Alarma Presión ------'''
+    Deslizar_Presion_maxima_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=6, to=30,
+                                    resolution=1, label="Pwaw(mmBar) Máxima", font=("Arial", 12),
+                                    variable=Variable_Presion_Alarma).place(x=300, y=650)
+
+    Boton_Presion_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                                  command=Guardar_Valor_Presion_alarma).place(x=500, y=50)
+    '''---- Alarma Frecuencia Respiratoria -----'''
+    Deslizar_frecuencia_respiratoria_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=9, to=27,
+                                             resolution=1, label="FR", font=("Arial", 12),
+                                             variable=Variable_alarma_FR).place(x=400, y=700)
+    Boton_Frecuencia_respiratoria_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                                                  command=Guardar_valor_Frecuencia_respiratoria_alarma).place(x=400,
+                                                                                                              y=800)
+    '''----- Alarmas Volumen Maximo y Minimo------'''
+    Deslizar_Volumen_maximo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=3000,
+                                           resolution=10, label="VT (mL) Máximo", font=("Arial", 12),
+                                           variable=Variable_alarma_volumen_maxima).place(x=500, y=500)
+    Boton_Volumen_maximo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                                         command=Guardar_valor_Volumen_maximo_alarma).place(x=400, y=900)
+
+    Deslizar_Volumen_minimo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=3000,
+                                           resolution=10, label="VT (mL) Mínimo", font=("Arial", 12),
+                                           variable= Variable_alarma_volumen_minima).place(x=600, y=800)
+    Boton_Volumen_minimo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                                         command=Guardar_valor_Volumen_minimo_alarma).place(x=750, y=1000)
+
+    ''' Alarma Volumen CO2'''
+    Deslizar_Volumen_CO2_Maximo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=95,
+                                        resolution=1, label="CO2 (Vol%) Máximo", font=("Arial", 12),
+                                        variable=Variable_alarma_Volumen_CO2_maximo).place(x=600, y=800)
+
+    Boton_Volumen_CO2_Maximo = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                                      command=Guardar_valor_Volumen_CO2_maximo).place(x=800, y= 500)
+
+    Deslizar_Volumen_CO2_Minimo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=95,
+                                               resolution=1, label="CO2 (Vol%) Minimo", font=("Arial", 12),
+                                               variable=Variable_alarma_Volumen_CO2_minimo).place(x=600, y=900)
+
+    Boton_Volumen_CO2_Minimo = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
+                                      command=Guardar_valor_Volumen_CO2_minimo).place(x=800, y=50)
+
+    Ajustes_alarmas.mainloop()
+
+
+
+
+
+Ventana_principal = Tk()
+Ventana_principal.geometry("2048x800")
+Ventana_principal.title("Respirador Mecánico")
+Boton_Parametros = Button(Ventana_principal, text="Ajustes Ventilador",
+                          borderwidth=2, height=5, width=20, command=Parametros_respirador).place(x=1000, y=350)
+Boton_alarmas = Button(Ventana_principal, text="Alarmas",
+                       borderwidth=2, height=5, width=20, command=Parametros_alarmas).place(x=1500,y=350)
+
+Variable_FR = IntVar()
+Variable_Ti = DoubleVar()
+Variable_PEEP = IntVar()
+Variable_Presion = IntVar()
+Variable_presion_soporte = IntVar()
+Variable_flujo_maximo = DoubleVar()
+Variable_flujo_minimo = DoubleVar()
+Variable_Presion_Alarma = IntVar()
+Variable_alarma_FR = IntVar()
+Variable_alarma_volumen_maxima = IntVar()
+Variable_alarma_volumen_minima = IntVar()
+Variable_alarma_Volumen_CO2_maximo = IntVar()
+Variable_alarma_Volumen_CO2_minimo = IntVar()
+Ventana_principal.mainloop()
