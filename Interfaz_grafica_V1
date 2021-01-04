@@ -103,31 +103,31 @@ def Parametros_respirador():
     Deslizar_Frecencia_respiratoria = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=10, to=30,
                                             length=350, resolution=1, label="Frecuencia respiratoria",
                                             font=("Arial", 12),
-                                            variable=Variable_FR).place(x=800, y=350)
+                                            variable=Variable_FR).place(x=150, y=350)
     Boton_FR = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                      command=Guardar_valor_Frecuencia_respiratoria).place(x=900, y=450)
+                      command=Guardar_valor_Frecuencia_respiratoria).place(x=275, y=450)
 
     '''------ Tiempo de inspiración ------'''
     Deslizar_Tiempo_Inspiracion = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=0.2, to=2.5, length=350,
                                         resolution=0.1, label="Tiempo inspiración", font=("Arial", 12),
-                                        variable=Variable_Ti).place(x=1200, y=350)
+                                        variable=Variable_Ti).place(x=550, y=350)
 
     Boton_Ti = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                      command=Guardar_valor_tiempo_inspiracion).place(x=1300, y=450)
+                      command=Guardar_valor_tiempo_inspiracion).place(x=675, y=450)
 
     ''' ----- Presión paciente ------'''
     Deslizar_presion_paciente = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=6, to=29, length=350,
                                       resolution=1, label="Presion inspiratoria", font=("Arial", 12),
-                                      variable=Variable_Presion).place(x=1200, y=550)
+                                      variable=Variable_Presion).place(x=950, y=350)
     Boton_presion_paciente = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                                    command=Guardar_valor_presion_paciente).place(x=1300, y=650)
+                                    command=Guardar_valor_presion_paciente).place(x=1075, y=450)
 
     ''' ---- PEEP ------ '''
     Deslizar_PEEP = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=0, to=20, length=350,
                           resolution=1, label="PEEP cmH2O", font=("Arial", 12),
-                          variable=Variable_PEEP).place(x=800, y=550)
+                          variable=Variable_PEEP).place(x=1350, y=350)
     Boton_PEEP = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                        command=Guardar_valor_PEEP).place(x=900, y=650)
+                        command=Guardar_valor_PEEP).place(x=1475, y=450)
 
     Ajustes_parametros.mainloop()
 
@@ -231,3 +231,4 @@ Boton_alarmas = Button(Ventana_principal, text="Alarmas",
 
 
 Ventana_principal.mainloop()
+
