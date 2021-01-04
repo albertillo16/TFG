@@ -15,9 +15,9 @@ def Guardar_valor_Frecuencia_respiratoria():
                            text="/m").place(x=290, y=890)
 
 
-def Guardar_valor_tiempo_inspiracion():
+def Guardar_valor_relacion_IE():
     Mostrar_Ti = Label(Ventana_principal, font=("Arial", 12),
-                       text="Tiempo inspiración\t\t " + str(Variable_Ti.get())).place(x=30, y=920)
+                       text="Tiempo inspiración\t\t " + str(Variable_IE.get())).place(x=30, y=920)
     Mostrar_unidad_Ti = Label(Ventana_principal, font=("Arial", 12),
                               text="s").place(x=290, y=920)
 
@@ -108,12 +108,12 @@ def Parametros_respirador():
                       command=Guardar_valor_Frecuencia_respiratoria).place(x=275, y=450)
 
     '''------ Tiempo de inspiración ------'''
-    Deslizar_Tiempo_Inspiracion = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=0.2, to=2.5, length=350,
-                                        resolution=0.1, label="Tiempo inspiración", font=("Arial", 12),
-                                        variable=Variable_Ti).place(x=550, y=350)
+    Deslizar_Relacion_IE = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=1, to=3, length=350,
+                                        resolution=1, label="Relacion I:E", font=("Arial", 12),
+                                        variable=Variable_IE).place(x=550, y=350)
 
     Boton_Ti = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                      command=Guardar_valor_tiempo_inspiracion).place(x=675, y=450)
+                      command=Guardar_valor_relacion_IE).place(x=675, y=450)
 
     ''' ----- Presión paciente ------'''
     Deslizar_presion_paciente = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=6, to=29, length=350,
@@ -205,7 +205,7 @@ Ventana_principal.geometry("2048x1080")
 Ventana_principal.title("Respirador Mecánico")
 
 Variable_FR = IntVar()
-Variable_Ti = DoubleVar()
+Variable_IE = IntVar()
 Variable_PEEP = IntVar()
 Variable_Presion = IntVar()
 
@@ -231,4 +231,3 @@ Boton_alarmas = Button(Ventana_principal, text="Alarmas",
 
 
 Ventana_principal.mainloop()
-
