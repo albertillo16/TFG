@@ -1,0 +1,128 @@
+
+# Importamos los módulos necesarios
+from threading import Thread
+import time
+import collections
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import serial
+
+Serial_data = 0
+isReceive = False  # bandera para comenzar a recibir datos
+isRun = True  # bandera para recibir datos
+value = 0
+
+
+def get_Data():
+    time.sleep(1)  # da tiempo para resivir datos
+    Serial_data.reset_input_buffer()
+    while (isRun):  # lee datos
+        global isReceive
+        global value
+        value = float(Serial_data.readline().strip())  # leer el sensor
+        isReceive = True
+
+
+def plot_Pressure(self, Muestras, Serial_data, lines_Pressure, lineValueText_Pressure, lineLabel_Pressure):
+    Datos.append(value)  # guarda lectura en ultima posicion
+    lines_Pressure.set_data(range(Muestras), Datos)  # Dibuja nueva linea
+    lineValueText_Pressure.set_text(lineLabel_Pressure + '-' + str(round(value, 2)))  # muestra el valor del sensor
+
+
+def plot_Flow(self, Muestras, Serial_data, lines_Flow, lineValueText_Flow, linelabel_Flow):
+    Datos.append(value)  # guarda lectura en ultima posicion
+    lines_Flow.set_data(range(Muestras), Datos)  # Dibuja nueva linea
+    lineValueText_Flow.set_text(linelabel_Flow + '-' + str(round(value, 2)))  # muestra el valor del sensor
+
+
+def plot_Volume(self, Muestras, Serial_data, lines_Flow, lineValueText_Volume, lineLabel_Volume):
+    Datos.append(value)  # guarda lectura en ultima posicion
+    lines_Volume.set_data(range(Muestras), Datos)  # Dibuja nueva linea
+    lineValueText_Volume.set_text(lineLabel_Volume + '-' + str(round(value, 2)))  # muestra el valor del sensor
+
+
+try:
+    Serial_data = serial.Serial('/dev/ttyACM0', 9600)
+except:
+    print("Can't connect the Arduino to the port")
+    print("Verify that the Arduino is connected")
+
+Muestras = 200
+Datos = collections.deque([0] * Muestras, maxlen=Muestras)  # vector de muestra
+sampleTime = 50 # Tiempo de muestreo
+
+# Limite de los ejes de Presión
+x_min_Pressure = 0
+x_max_Pressure = Muestras
+y_min_Pressure = 0
+y_max_Pressure = 1023
+
+# Limite de los ejes Flujo
+x_min_Flow = 0
+x_max_Flow = Muestras
+y_min_Flow = 0
+y_max_Flow = 1023
+
+x_min_Volume = 0
+x_max_Volume = Muestras
+y_min_Volume = 0
+y_max_Volume = 1023
+
+fig_All, (ax1_Pressure, ax2_Flow, ax3_Volume) = plt.subplots(nrows=3, ncols=1, figsize=(20, 7))
+ax1_Pressure.set_xlim(0, Muestras)
+ax1_Pressure.set_ylim(0, 1023)
+ax1_Pressure.set_position([0.08, 0.7, 0.7, 0.2])
+ax1_Pressure.set_xlabel("Samples")
+ax1_Pressure.set_ylabel("Pressure Value")
+lineLabel_Pressure = "Pressure"
+
+ax2_Flow.set_xlim(0, Muestras)
+ax2_Flow.set_ylim(0, 1023)
+ax2_Flow.set_position([0.08, 0.4, 0.7, 0.2])
+ax2_Flow.set_xlabel("Samples")
+ax2_Flow.set_ylabel("Flow Value")
+lineLabel_Flow = "Flow"
+
+ax3_Volume.set_xlim(0, Muestras)
+ax3_Volume.set_ylim(0, 1023)
+ax3_Volume.set_position([0.08, 0.1, 0.7, 0.2])
+ax3_Volume.set_xlabel("Samples")
+ax3_Volume.set_ylabel("Volume Value")
+lineLabel_Volume = "Volume"
+
+lines_Pressure = ax1_Pressure.plot([], [], label=lineLabel_Pressure)[0]
+lines_Flow = ax2_Flow.plot([], [], label=lineLabel_Flow[0])[0]
+lines_Volume = ax3_Volume.plot([], [], label=lineLabel_Volume[0])[0]
+
+lineValueText_Pressure = ax1_Pressure.text(0.85, 0.95, '',
+                                           transform=ax1_Pressure.transAxes)  # agrega texto en las cordenadas x,y
+lineValueText_Flow = ax2_Flow.text(0.85, 0.95, '', transform=ax2_Flow.transAxes)  # agrega texto en las cordenadas x,y
+lineValueText_Volume = ax3_Volume.text(0.85, 0.95, '',
+                                       transform=ax3_Volume.transAxes)  # agrega texto en las cordenadas x,y
+
+thread = Thread(target=get_Data)  # crea objeto de la clase Thread
+thread.start()  # inicia subproseso
+
+while isReceive != True:  # espera hasta resivir datos
+    print("Start....")
+    time.sleep(0.1)
+    control = False
+
+anim_Pressure = animation.FuncAnimation(fig_All, plot_Pressure, fargs=(Muestras, Serial_data, lines_Pressure,
+                                                                       lineValueText_Pressure, lineLabel_Pressure),
+                                        interval=sampleTime)
+anim_Flow = animation.FuncAnimation(fig_All, plot_Flow, fargs=(Muestras, Serial_data, lines_Flow,
+                                                               lineValueText_Flow, lineLabel_Flow),
+                                    interval=sampleTime)
+anim_Volume = animation.FuncAnimation(fig_All, plot_Volume, fargs=(Muestras, Serial_data, lines_Volume,
+                                                                   lineValueText_Volume, lineLabel_Volume),
+                                      interval=sampleTime)
+
+ax1_Pressure.plot()
+ax2_Flow.plot()
+ax3_Volume.plot()
+plt.show()
+
+isRun = False
+thread.join()  # finaliza subproseso antes de que el programa ejecute la siguiente instruccion
+Serial_data.close()  # finaliza la conexion serial
