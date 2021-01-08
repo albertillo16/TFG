@@ -4,8 +4,8 @@ from tkinter import *
 def Iniciar():
     print("Hola")
 
-def En_Espera():
-    print("Adios")
+def Cerrar():
+    Ventana_principal.destroy()
 
 
 def Guardar_valor_Frecuencia_respiratoria():
@@ -137,7 +137,7 @@ def Parametros_respirador():
 
 def Parametros_alarmas():
     Ajustes_alarmas = Toplevel()
-    Ajustes_alarmas.geometry("2018x800")
+    Ajustes_alarmas.geometry("2048x800")
     Ajustes_alarmas.title("Alarmas")
 
     '''Parametros a configurar de alarmas'''
@@ -218,14 +218,19 @@ Variable_alarma_volumen_minima = IntVar()
 Variable_alarma_Volumen_CO2_maximo = IntVar()
 Variable_alarma_Volumen_CO2_minimo = IntVar()
 
+Rec_parametros = Canvas(Ventana_principal, width=2048, height=1080)
+Rec_parametros.pack()
+Rec_parametros.create_rectangle(30, 1010, 200, 100)
+
 Boton_Iniciar = Button(Ventana_principal, text="Iniciar", borderwidth=2,
                        height=5, width=20, command=Iniciar).place(x=375, y=900)
-Boton_En_Espera = Button(Ventana_principal, text="En espera", borderwidth=2,
-                         height=5, width=20, command=En_Espera).place(x=650, y=900)
+Boton_Cerrar = Button(Ventana_principal, text="Salir", borderwidth=2,
+                         height=5, width=20, command=Cerrar).place(x=650, y=900)
 Boton_Parametros = Button(Ventana_principal, text="Ajustes Ventilador", borderwidth=2,
                           height=5, width=20, command=Parametros_respirador).place(x=950, y=900)
 Boton_alarmas = Button(Ventana_principal, text="Alarmas",
                        borderwidth=2, height=5, width=20, command=Parametros_alarmas).place(x=1250, y=900)
+
 
 
 
