@@ -1,238 +1,270 @@
 
+# import time
+from threading import Thread
+# import serial
 from tkinter import *
+import queue
+from tkinter import IntVar
 
-def Iniciar():
-    print("Hola")
-
-def Cerrar():
-    Ventana_principal.destroy()
-
-
-def Guardar_valor_Frecuencia_respiratoria():
-    Mostrar_FR = Label(Ventana_principal, font=("Arial", 12),
-                       text="Frecuencia respiratoria\t " + str(Variable_FR.get())).place(x=30, y=890)
-    Mostrar_unidad_FR = Label(Ventana_principal, font=("Arial", 12),
-                           text="/m").place(x=290, y=890)
+global Serial_Data
+q = queue.Queue()
+global Data_Pressure
 
 
-def Guardar_valor_relacion_IE():
-    Mostrar_Ti = Label(Ventana_principal, font=("Arial", 12),
-                       text="Tiempo inspiración\t\t " + str(Variable_IE.get())).place(x=30, y=920)
-    Mostrar_unidad_Ti = Label(Ventana_principal, font=("Arial", 12),
-                              text="s").place(x=290, y=920)
+def Parameters_alarms(Main_window, V_maximum_flow_alarm, V_minimum_flow_alarm, V_Pressure_alarm,
+                      V_maximum_volume_alarm, V_minimum_volume_alarm,
+                      V_maximum_Volume_CO2_alarm, V_minimum_Volume_CO2_alarm):
+    Alarms_settings = Toplevel()
+    Alarms_settings.geometry("2048x800")
+    Alarms_settings.title("Respirator alarms")
 
-def Guardar_valor_presion_paciente():
-    Mostrar_paciente = Label(Ventana_principal, font=("Arial", 12),
-                             text="Presión inspiratoria\t\t " + str(Variable_Presion.get())).place(x=30, y=950)
-    Mostrar_unidad_presion = Label(Ventana_principal, font=("Arial", 12),
-                                   text="mmBar").place(x=290, y=950)
+    # ----- Parameters to configure alarms ------
+    # Maximum and minimum flow
+    Slide_maximum_flow_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=0, to=30, length=350,
+                                     resolution=1, label="Maximum L/min", font=("Arial", 12),
+                                     variable=V_maximum_flow_alarm).place(x=100, y=200)
+    Button_maximum_flow_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                       command=lambda: Save_maximum_unit_flow(Main_window, V_maximum_flow_alarm)).place(
+        x=225,
+        y=300)
+    Slide_minimum_flow_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=0, to=30, length=350,
+                                     resolution=1, label="Minimum L/min ", font=("Arial", 12),
+                                     variable=V_minimum_flow_alarm).place(x=100, y=400)
+    Button_minimum_flow_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                       command=lambda: Save_minimum_unit_flow(Main_window, V_minimum_flow_alarm)).place(
+        x=225, y=500)
+    # ---- Alarm Pressure -------
+    Slide_pressure_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=6, to=30, length=350,
+                                 resolution=1, label=" Maximum Pins (cmH2O)", font=("Arial", 12),
+                                 variable=V_Pressure_alarm).place(x=500, y=300)
+    Button_pressure_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                   command=lambda: Save_unit_pressure(Main_window, V_Pressure_alarm)).place(x=625,
+                                                                                                            y=400)
+    # ---- Maximum and minimum volume alarms -------
+    Slide_maximum_volume_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=0, to=3000, length=350,
+                                       resolution=10, label="Maximum VT (mL)", font=("Arial", 12),
+                                       variable=V_maximum_volume_alarm).place(x=950, y=200)
+    Button_maximum_volume_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                         command=lambda: Save_maximum_unit_volume(Main_window, V_maximum_volume_alarm)).place(x=1075, y=300)
 
-def Guardar_valor_PEEP():
-    Mostrar_PEEP = Label(Ventana_principal, font=("Arial", 12),
-                         text="PEEP\t\t\t " + str(Variable_PEEP.get())).place(x=30, y=980)
-    Mostrar_unidad_PEEP = Label(Ventana_principal, font=("Arial", 12),
-                                text="mBar").place(x=290, y=980)
+    Slide_minimum_volume_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=0, to=3000, length=350,
+                                       resolution=10, label="Minimum VT (mL) ", font=("Arial", 12),
+                                       variable=V_minimum_volume_alarm).place(x=950, y=400)
+    Button_minimum_volume_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                         command=lambda: Save_minimum_unit_volume(Main_window,
+                                                                                  V_minimum_volume_alarm)).place(x=1075,
+                                                                                                                 y=500)
 
-''' ------   Valores de alarma ------- '''
+    # ------------- Maximum and minimum C02 -------------------
+    Slide_maximum_CO2_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=0, to=95, length=350,
+                                    resolution=1, label="Maximum CO2 (Vol%) ", font=("Arial", 12),
+                                    variable=V_maximum_Volume_CO2_alarm).place(x=1400, y=200)
 
-def Guardar_Valor_flujo_maximo():
-    Mostrar_flujo_maximo = Label(Ventana_principal, font=("Arial", 12),
-                                 text="Flujo máximo\t\t " + str(Variable_flujo_maximo_alarma.get())).place(x=1475,
-                                                                                                            y=770)
-    Mostrar_unidad_flujo_maximo = Label(Ventana_principal, font=("Arial",12),
-                                        text="L/min").place(x=1750, y=770)
-
-def Guardar_Valor_flujo_minimo():
-    Mostrar_flujo_minimo = Label(Ventana_principal, font=("Arial", 12),
-                                 text="Flujo mínimo\t\t " + str(Variable_flujo_minimo_alarma.get())).place(x=1475,
-                                                                                                           y=800)
-    Mostrar_unidad_flujo_minimo = Label(Ventana_principal, font=("Arial", 12),
-                                        text="L/min").place(x=1750, y=800)
-
-def Guardar_Valor_Presion_alarma():
-    Mostrar_Presion_maximo = Label(Ventana_principal, font=("Arial", 12),
-                                   text="Paw\t\t\t " + str(Variable_Presion_Alarma.get())).place(x=1475, y=830)
-    Mostrar_unidad_presion_maxima = Label(Ventana_principal, font=("Arial", 12),
-                                          text="mmBar").place(x=1750, y=830)
-
-def Guardar_valor_Frecuencia_respiratoria_alarma():
-    Mostrar_Frecuencia_respiratoria_alarma = Label(Ventana_principal, font=("Arial", 12),
-                                                   text="Frecuencia respiratoria\t " + str(
-                                                       Variable_alarma_FR.get())).place(x=1475, y=860)
-    Mostrar_unidad_Frecuencia_respiratoria = Label(Ventana_principal, font=("Arial", 12),
-                                                   text="/min").place(x=1750, y=860)
-
-
-def Guardar_valor_Volumen_maximo_alarma():
-    Mostrar_Volumen_Maximo = Label(Ventana_principal, font=("Arial", 12),
-                                   text="VT Máximo\t\t " + str(Variable_alarma_volumen_maxima.get())).place(x=1475,
-                                                                                                              y=890)
-    Mostrar_unidad_Volumen_maximo = Label(Ventana_principal, font=("Arial", 12),
-                                          text="ml").place(x=1750, y=890)
-
-def Guardar_valor_Volumen_minimo_alarma():
-    Mostrar_Volumen_Minimo = Label(Ventana_principal, font=("Arial", 12),
-                                   text="VT Mínimo\t\t " + str(Variable_alarma_volumen_minima.get())).place(x=1475,
-                                                                                                              y=920)
-    Mostra_unidad_Volumen_minimo = Label(Ventana_principal, font=("Arial", 12),
-                                         text="ml").place(x=1750, y=920)
-
-def Guardar_valor_Volumen_CO2_maximo():
-    Mostrar_Volumen_CO2_Maximo = Label(Ventana_principal, font=("Arial", 12),
-                                       text="CO2 Máximo\t\t " + str(Variable_alarma_Volumen_CO2_maximo.get())).place(x=1475, y=950)
-    Mostrar_unidad_CO2_maxima = Label(Ventana_principal, font=("Arial", 12), text="%").place(x=1750, y=950)
+    Button_maximum_CO2_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                      command=lambda: Save_maximum_unit_CO2(Main_window,
+                                                                            V_maximum_Volume_CO2_alarm)).place(x=1525,
+                                                                                                               y=300)
+    Slide_minimum_CO2_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=0, to=95, length=350,
+                                    resolution=1, label="Minimum CO2 (Vol%) ", font=("Arial", 12),
+                                    variable=V_minimum_Volume_CO2_alarm).place(x=1400, y=400)
+    Button_minimum_CO2_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                      command=lambda: Save_minimum_unit_CO2(Main_window,
+                                                                            V_minimum_Volume_CO2_alarm)).place(x=1525,
+                                                                                                               y=500)
 
 
-def Guardar_valor_Volumen_CO2_minimo():
-    Mostrar_Volumen_CO2_Minimo = Label(Ventana_principal, font=("Arial", 12),
-                                       text="CO2 (Vol%) Mínimo\t\t " + str(Variable_alarma_Volumen_CO2_minimo.get())).place(x=1475, y=980)
-    Mostrar_unidad_CO2_minimo = Label(Ventana_principal, font=("Arial", 12),
-                                      text="%").place(x=1750, y=980)
+# ------- Units alarms ---------
+def Save_maximum_unit_flow(Main_window, V_maximum_flow_alarm):
+    Show_maximum_flow = Label(Main_window, font=("Arial", 12),
+                              text="Maximum Flow\t\t " + str(V_maximum_flow_alarm.get())).place(x=400, y=800)
+    Show_maximum_unit_flow = Label(Main_window, font=("Arial", 12),
+                                   text="L/min").place(x=675, y=800)
 
 
+def Save_minimum_unit_flow(Main_window, V_minimum_flow_alarm):
+    Show_minimum_flow = Label(Main_window, font=("Arial", 12),
+                              text="Minimum Flow\t\t " + str(V_minimum_flow_alarm.get())).place(x=400, y=830)
+    Show_minimum_unit_flow = Label(Main_window, font=("Arial", 12), text="L/min").place(x=675, y=830)
 
 
-
-def Parametros_respirador():
-    Ajustes_parametros = Toplevel()
-    Ajustes_parametros.geometry("2048x800")
-    Ajustes_parametros.title("Ajustes del ventilador")
-
-    '''------ Parametros a configurar-----------'''
-    '''----- Frecuencia respiratoria -------'''
-    Deslizar_Frecencia_respiratoria = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=10, to=30,
-                                            length=350, resolution=1, label="Frecuencia respiratoria",
-                                            font=("Arial", 12),
-                                            variable=Variable_FR).place(x=150, y=350)
-    Boton_FR = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                      command=Guardar_valor_Frecuencia_respiratoria).place(x=275, y=450)
-
-    '''------ Tiempo de inspiración ------'''
-    Deslizar_Relacion_IE = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=1, to=3, length=350,
-                                        resolution=1, label="Relacion I:E", font=("Arial", 12),
-                                        variable=Variable_IE).place(x=550, y=350)
-
-    Boton_Ti = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                      command=Guardar_valor_relacion_IE).place(x=675, y=450)
-
-    ''' ----- Presión paciente ------'''
-    Deslizar_presion_paciente = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=6, to=29, length=350,
-                                      resolution=1, label="Presion inspiratoria", font=("Arial", 12),
-                                      variable=Variable_Presion).place(x=950, y=350)
-    Boton_presion_paciente = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                                    command=Guardar_valor_presion_paciente).place(x=1075, y=450)
-
-    ''' ---- PEEP ------ '''
-    Deslizar_PEEP = Scale(Ajustes_parametros, orient=HORIZONTAL, width=50, from_=0, to=20, length=350,
-                          resolution=1, label="PEEP cmH2O", font=("Arial", 12),
-                          variable=Variable_PEEP).place(x=1350, y=350)
-    Boton_PEEP = Button(Ajustes_parametros, text="Guardar", borderwidth=2, height=4, width=10,
-                        command=Guardar_valor_PEEP).place(x=1475, y=450)
-
-    Ajustes_parametros.mainloop()
+def Save_unit_pressure(Main_window, V_Pressure_alarm):
+    Show_pressure = Label(Main_window, font=("Arial", 12),
+                          text="Paw\t\t\t " + str(V_Pressure_alarm.get())).place(x=400, y=860)
+    Show_unit_pressure = Label(Main_window, font=("Arial", 12), text="cmH2O").place(x=675, y=860)
 
 
-'''-------------- PARAMETROS DE ALARMAS DEL VENTILADOR ----------------------------'''
+def Save_maximum_unit_volume(Main_window, V_maximum_volume_alarm):
+    Show_maximum_volume = Label(Main_window, font=("Arial", 12),
+                                text="VT Maximum\t\t " + str(V_maximum_volume_alarm.get())).place(x=400, y=890)
+    Show_maximum_unit_volume = Label(Main_window, font=("Arial", 12),
+                                     text="ml").place(x=675, y=890)
 
 
-def Parametros_alarmas():
-    Ajustes_alarmas = Toplevel()
-    Ajustes_alarmas.geometry("2048x800")
-    Ajustes_alarmas.title("Alarmas")
-
-    '''Parametros a configurar de alarmas'''
-    '''Flujo maximo y minimo'''
-
-    Deslizar_Flujo_Maximo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=26.6, length=300,
-                                         resolution=0.1, label="L/min Máximo", font=("Arial", 12),
-                                         variable=Variable_flujo_maximo_alarma).place(x=50, y=200)
-    Boton_Flujo_Maximo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                       command=Guardar_Valor_flujo_maximo).place(x=150, y=300)
-    Deslizar_Flujo_Minimo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=30, length=300,
-                                         resolution=1, label="L/min Mínimo", font=("Arial", 12),
-                                         variable=Variable_flujo_minimo_alarma).place(x=50, y=400)
-    Boton_Flujo_Minimo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                       command=Guardar_Valor_flujo_minimo).place(x=150, y=500)
-    '''------  Alarma Presión ------'''
-    Deslizar_Presion_maxima_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=6, to=30, length=300,
-                                           resolution=1, label="Pwaw(mmBar) Máxima", font=("Arial", 12),
-                                           variable=Variable_Presion_Alarma).place(x=400, y=300)
-
-    Boton_Presion_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                  command=Guardar_Valor_Presion_alarma).place(x=500, y=400)
-    '''---- Alarma Frecuencia Respiratoria -----'''
-    Deslizar_frecuencia_respiratoria_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=9, to=27,
-                                                    length=300, resolution=1, label="FR", font=("Arial", 12),
-                                                    variable=Variable_alarma_FR).place(x=750, y=300)
-    Boton_Frecuencia_respiratoria_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                                  command=Guardar_valor_Frecuencia_respiratoria_alarma).place(x=850,
-                                                                                                              y=400)
-    '''----- Alarmas Volumen Maximo y Minimo------'''
-    Deslizar_Volumen_maximo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=3000, length=300,
-                                           resolution=10, label="VT (mL) Máximo", font=("Arial", 12),
-                                           variable=Variable_alarma_volumen_maxima).place(x=1100, y=200)
-    Boton_Volumen_maximo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                         command=Guardar_valor_Volumen_maximo_alarma).place(x=1200, y=300)
-
-    Deslizar_Volumen_minimo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=3000, length=300,
-                                           resolution=10, label="VT (mL) Mínimo", font=("Arial", 12),
-                                           variable=Variable_alarma_volumen_minima).place(x=1100, y=400)
-    Boton_Volumen_minimo_alarma = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                         command=Guardar_valor_Volumen_minimo_alarma).place(x=1200, y=500)
-
-    ''' Alarma Volumen CO2'''
-    Deslizar_Volumen_CO2_Maximo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=95, length=300,
-                                               resolution=1, label="CO2 (Vol%) Máximo", font=("Arial", 12),
-                                               variable=Variable_alarma_Volumen_CO2_maximo).place(x=1500, y=200)
-
-    Boton_Volumen_CO2_Maximo = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                      command=Guardar_valor_Volumen_CO2_maximo).place(x=1600, y=300)
-
-    Deslizar_Volumen_CO2_Minimo_alarma = Scale(Ajustes_alarmas, orient=HORIZONTAL, width=50, from_=0, to=95, length=300,
-                                               resolution=1, label="CO2 (Vol%) Minimo", font=("Arial", 12),
-                                               variable=Variable_alarma_Volumen_CO2_minimo).place(x=1500, y=400)
-
-    Boton_Volumen_CO2_Minimo = Button(Ajustes_alarmas, text="Guardar", borderwidth=2, height=4, width=10,
-                                      command=Guardar_valor_Volumen_CO2_minimo).place(x=1600, y=500)
-
-    Ajustes_alarmas.mainloop()
+def Save_minimum_unit_volume(Main_window, V_minimum_volume_alarm):
+    Show_minimum_volume = Label(Main_window, font=("Arial", 12),
+                                text="VT Minimum\t\t " + str(V_minimum_volume_alarm.get())).place(x=400, y=920)
+    Show_minimum_unit_volume = Label(Main_window, font=("Arial", 12),
+                                     text="ml").place(x=675, y=920)
 
 
+def Save_maximum_unit_CO2(Main_window, V_maximum_Volume_CO2_alarm):
+    Show_maximum_CO2_volume = Label(Main_window, font=("Arial", 12),
+                                    text="CO2 (Vol%) Maximum\t " + str(V_maximum_Volume_CO2_alarm.get())).place(x=400, y=950)
+
+    Show_maximum_unit_CO2_volume = Label(Main_window, font=("Arial", 12), text="%").place(x=675, y=950)
 
 
-Ventana_principal = Tk()
-Ventana_principal.geometry("2048x1080")
-Ventana_principal.title("Respirador Mecánico")
-
-Variable_FR = IntVar()
-Variable_IE = IntVar()
-Variable_PEEP = IntVar()
-Variable_Presion = IntVar()
-
-Variable_flujo_maximo_alarma = DoubleVar()
-Variable_flujo_minimo_alarma = DoubleVar()
-Variable_Presion_Alarma = IntVar()
-Variable_alarma_FR = IntVar()
-Variable_alarma_volumen_maxima = IntVar()
-Variable_alarma_volumen_minima = IntVar()
-Variable_alarma_Volumen_CO2_maximo = IntVar()
-Variable_alarma_Volumen_CO2_minimo = IntVar()
-
-Rec_parametros = Canvas(Ventana_principal, width=2048, height=1080)
-Rec_parametros.pack()
-Rec_parametros.create_rectangle(30, 1010, 200, 100)
-
-Boton_Iniciar = Button(Ventana_principal, text="Iniciar", borderwidth=2,
-                       height=5, width=20, command=Iniciar).place(x=375, y=900)
-Boton_Cerrar = Button(Ventana_principal, text="Salir", borderwidth=2,
-                         height=5, width=20, command=Cerrar).place(x=650, y=900)
-Boton_Parametros = Button(Ventana_principal, text="Ajustes Ventilador", borderwidth=2,
-                          height=5, width=20, command=Parametros_respirador).place(x=950, y=900)
-Boton_alarmas = Button(Ventana_principal, text="Alarmas",
-                       borderwidth=2, height=5, width=20, command=Parametros_alarmas).place(x=1250, y=900)
+def Save_minimum_unit_CO2(Main_window, V_minimum_Volume_CO2_alarm):
+    Show_minimum_CO2_volume = Label(Main_window, font=("Arial", 12),
+                                    text="CO2 (Vol%) Minimum\t " + str(V_minimum_Volume_CO2_alarm.get())).place(x=400,
+                                                                                                                  y=980)
+    Show_minimum_unit_CO2 = Label(Main_window, font=("Arial", 12),
+                                  text="%").place(x=675, y=980)
 
 
+# ----------------------------------------------------------------------------------------------------------------------------------------------
+def Respirator_parameters(Main_window, Variable_FR, Variable_IE, Variable_PEEP, Variable_Pressure):
+    Parameters_settings = Toplevel()
+    Parameters_settings.geometry("2048x800")
+    Parameters_settings.title("Respirator settings")
+
+    # ----------- Parameters to configure -------------
+    # ----------- Breathing frequency -----------
+    Slide_respiratory_ratio = Scale(Parameters_settings, orient=HORIZONTAL, width=50, from_=10, to=30,
+                                    length=350, resolution=1, label="Breathing Frequency",
+                                    font=("Arial", 12),
+                                    variable=Variable_FR).place(x=150, y=350)
+    Button_FR = Button(Parameters_settings, text="Save", borderwidth=2, height=4, width=10,
+                       command=lambda: Save_respiratory_rate_value(Main_window, Variable_FR)).place(x=275,
+                                                                                                    y=450)
+    # ----------- I:E Ratio -----------
+    Slide_IE_ratio = Scale(Parameters_settings, orient=HORIZONTAL, width=50, from_=1, to=3, length=350,
+                           resolution=1, label="Ratio I:E", font=("Arial", 12),
+                           variable=Variable_IE).place(x=550, y=350)
+    Button_IE = Button(Parameters_settings, text="Save", borderwidth=2, height=4, width=10,
+                       command=lambda: Save_IE_ratio_value(Main_window, Variable_IE)).place(x=675, y=450)
+
+    # ------- Inspiration Pressure -------
+    Slide_pressure_ratio = Scale(Parameters_settings, orient=HORIZONTAL, width=50, from_=10, to=15, length=350,
+                                 resolution=1, label="Inspiration Pressure", font=("Arial", 12),
+                                 variable=Variable_Pressure).place(x=950, y=350)
+    Button_pressure_patient = Button(Parameters_settings, text="Save", borderwidth=2, height=4, width=10,
+                                     command=lambda: Save_Pressure_ratio_value(Main_window,
+                                                                               Variable_Pressure)).place(x=1075, y=450)
+    Slide_PEEP = Scale(Parameters_settings, orient=HORIZONTAL, width=50, from_=5, to=10, length=350,
+                       resolution=1, label="PEEP cmH2O", font=("Arial", 12),
+                       variable=Variable_PEEP).place(x=1350, y=350)
+    Button_PEEP = Button(Parameters_settings, text="Save", borderwidth=2, height=4, width=10,
+                         command=lambda: Save_PEEP_value(Main_window, Variable_PEEP)).place(x=1475, y=450)
 
 
+def Save_respiratory_rate_value(Main_window, Variable_FR):
+    Show_FR = Label(Main_window, font=("Arial", 12),
+                    text="Breathing frequency\t\t " + str(Variable_FR.get())).place(x=30, y=890)
 
-Ventana_principal.mainloop()
+    Show_unit_FR = Label(Main_window, font=("Arial", 12),
+                         text="/m").place(x=290, y=890)
+
+
+def Save_IE_ratio_value(Main_window, Variable_IE):
+    Show_IE = Label(Main_window, font=("Arial", 12),
+                    text="I:E ratio\t\t\t 1:" + str(Variable_IE.get())).place(x=30, y=920)
+
+
+def Save_Pressure_ratio_value(Main_window, Variable_Pressure):
+    Show_Pressure = Label(Main_window, font=("Arial", 12),
+                          text="Inspiration Pressure\t\t " + str(Variable_Pressure.get())).place(x=30, y=950)
+    Show_unit_pressure = Label(Main_window, font=("Arial", 12),
+                               text="cmH2O").place(x=290, y=950)
+
+
+def Save_PEEP_value(Main_window, Variable_PEEP):
+    Show_PEEP = Label(Main_window, font=("Arial", 12),
+                      text="PEEP\t\t\t " + str(Variable_PEEP.get())).place(x=30, y=980)
+    Show_unit_PEEP = Label(Main_window, font=("Arial", 12),
+                           text="cmH20").place(x=290, y=980)
+
+
+def graphic_display():
+    # while 1:
+    Main_window = Tk()
+    Main_window.title('Real time plot')
+    Main_window.geometry("2048x1080")
+    # ---- Variables Parameters ------
+    Variable_FR = IntVar()
+    Variable_IE = IntVar()
+    Variable_PEEP = IntVar()
+    Variable_Pressure = IntVar()
+    # ----- Variables Alarms -------
+    V_maximum_flow_alarm = IntVar()
+    V_minimum_flow_alarm = IntVar()
+    V_Pressure_alarm = IntVar()
+    V_maximum_volume_alarm = IntVar()
+    V_minimum_volume_alarm = IntVar()
+    V_maximum_Volume_CO2_alarm = IntVar()
+    V_minimum_Volume_CO2_alarm = IntVar()
+
+    # Tiempo de rampa (Importante) ?
+    Rec_Parameters = Canvas(Main_window, width=2048, height=1080)
+    Rec_Parameters.pack()
+    Label_Parameters = Label(Main_window, text="Respirator parameters", font=("Arial", 12)).place(x=100, y=850)
+
+    Rec_Parameters.create_line(20, 875, 360, 875)
+    Rec_Parameters.create_line(20, 1010, 360, 1010)
+    Rec_Parameters.create_line(360, 1010, 360, 875)
+    Rec_Parameters.create_line(20, 1010, 20, 875)
+    Label_Alarm = Label(Main_window, text="Configured alarms", font=("Arial", 12)).place(x=525, y=750)
+    Rec_Parameters.create_line(375, 1010, 800, 1010)
+    Rec_Parameters.create_line(375, 780, 800, 780)
+    Rec_Parameters.create_line(375, 1010, 375, 780)
+    Rec_Parameters.create_line(800, 1010, 800, 780)
+
+    Button_Parameters = Button(Main_window, text="Respirador Settings", borderwidth=2,
+                               height=5, width=20, command=lambda: Respirator_parameters(Main_window, Variable_FR,
+                                                                                         Variable_IE, Variable_PEEP,
+                                                                                         Variable_Pressure)).place(
+        x=1350,
+        y=900)
+    Button_alarms = Button(Main_window, text="Alarms", borderwidth=2, height=5, width=20,
+                           command=lambda: Parameters_alarms(Main_window, V_maximum_flow_alarm,
+                                                             V_minimum_flow_alarm, V_Pressure_alarm,
+                                                             V_maximum_volume_alarm,
+                                                             V_minimum_volume_alarm,
+                                                             V_maximum_Volume_CO2_alarm,
+                                                             V_minimum_Volume_CO2_alarm)).place(x=1600, y=900)
+    Main_window.mainloop()
+
+
+'''
+def Serial_Handle():
+    global Data_Pressure
+    while 1:
+        time.sleep(0.1)
+        Serial_Data.reset_input_buffer()
+        Data_Pressure = str((Serial_Data.readline().decode('utf-8')))
+        q.put(Data_Pressure)
+        Write_Serial_Pressure()
+
+
+def Write_Serial_Pressure():
+    data_write = q.get(Data_Pressure)
+    Fo_Pressure = open("Pressure.txt", "a")
+    Fo_Pressure.write(data_write)
+    Fo_Pressure.close()
+
+
+try:
+    Serial_Data = serial.Serial('/dev/ttyACM0', 9600, timeout=5)
+except:
+    print("Connection failed")
+'''
+graph = Thread(target=graphic_display)
+graph.start()
+'''
+Data_s = Thread(target=Serial_Handle)
+Data_s.start()
+'''
+graph.join()
+# Data_s.join()
+
+# Serial_Data.close()
