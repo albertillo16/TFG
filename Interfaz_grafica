@@ -1,0 +1,414 @@
+import time
+from threading import Thread
+import serial
+from tkinter import *
+
+
+import RPi.GPIO as GPIO
+import MAX30100
+
+
+global Serial_Data
+global Data
+global Data_Pressure
+#global hb, Spo2
+
+GPIO.setmode(GPIO.BOARD)
+# Luz verde
+GPIO.setup(7, GPIO.OUT) # Hb
+GPIO.setup(11, GPIO.OUT) # spo2
+GPIO.setup(12, GPIO.OUT) # Flow
+GPIO.setup(13, GPIO.OUT) # Volume
+GPIO.setup(15, GPIO.OUT)  # Pressure
+GPIO.setup(16, GPIO.OUT) # Oxygen
+# Luz roja
+GPIO.setup(18, GPIO.OUT) # Hb
+GPIO.setup(19, GPIO.OUT) # Spo2
+GPIO.setup(21, GPIO.OUT) # Flow
+GPIO.setup(22, GPIO.OUT) # Volume
+GPIO.setup(23, GPIO.OUT) # Pressure
+GPIO.setup(24, GPIO.OUT) # Oxygen
+
+
+
+def Parameters_alarms(Main_window, V_maximum_flow_alarm, V_minimum_flow_alarm, V_Pressure_alarm, V_maximum_volume_alarm,
+                      V_minimum_volume_alarm, V_maximum_FC_alarm, V_minimum_SPO2_alarm, V_maximum_O2_alarm):
+    Alarms_settings = Toplevel()
+    Alarms_settings.geometry("2048x800")
+    Alarms_settings.title("Respirator alarms")
+    # Maximum and minimum flow
+    Slide_maximum_flow_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=1, to=30, length=350,
+                                     resolution=1, label="Maximum L/min", font=("Arial", 12),
+                                     variable=V_maximum_flow_alarm).place(x=100, y=200)
+    # Button
+    Button_maximum_flow_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                       command=lambda: Save_maximum_unit_flow(Main_window, V_maximum_flow_alarm)).place(
+        x=225,
+        y=300)
+    Slide_minimum_flow_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=1, to=30, length=350,
+                                     resolution=1, label="Minimum L/min ", font=("Arial", 12),
+                                     variable=V_minimum_flow_alarm).place(x=100, y=400)
+    Button_minimum_flow_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                       command=lambda: Save_minimum_unit_flow(Main_window, V_minimum_flow_alarm)).place(
+        x=225, y=500)
+    # ---- Alarm Pressure -------
+    Slide_pressure_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=1, to=20, length=350,
+                                 resolution=1, label=" Maximum Pressure (cmH2O)", font=("Arial", 12),
+                                 variable=V_Pressure_alarm).place(x=500, y=200)
+    Button_pressure_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                   command=lambda: Save_unit_pressure(Main_window, V_Pressure_alarm)).place(x=625,
+                                                                                                            y=300)
+
+    # --- Alarm O2 ----
+    Slide_O2_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=21, to=30, length=350,
+                           resolution=1, label=" Maximum 02 (%)", font=("Arial", 12),
+                           variable=V_maximum_O2_alarm).place(x=500, y=400)
+    Button_O2_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                             command=lambda: Save_unit_O2(Main_window, V_maximum_O2_alarm)).place(x=625, y=500)
+
+    # ---- Maximum and minimum volume alarms -------
+    Slide_maximum_volume_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=1, to=3000, length=350,
+                                       resolution=1, label="Maximum Volumen (mL)", font=("Arial", 12),
+                                       variable=V_maximum_volume_alarm).place(x=950, y=200)
+    Button_maximum_volume_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                         command=lambda: Save_maximum_unit_volume(Main_window,
+                                                                                  V_maximum_volume_alarm)).place(x=1075,
+                                                                                                                 y=300)
+
+    Slide_minimum_volume_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=1, to=3000, length=350,
+                                       resolution=1, label="Minimum Volumen (mL) ", font=("Arial", 12),
+                                       variable=V_minimum_volume_alarm).place(x=950, y=400)
+    Button_minimum_volume_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                         command=lambda: Save_minimum_unit_volume(Main_window,
+                                                                                  V_minimum_volume_alarm)).place(x=1075,
+                                                                                                                 y=500)
+    # --- Maximum FC ------
+    Slide_maximum_FC_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=1, to=120, length=350,
+                                   resolution=1, label="Maximum PPM ", font=("Arial", 12),
+                                   variable=V_maximum_FC_alarm).place(x=1400, y=200)
+    Button_maximum_FC_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                     command=lambda: Save_maximum_unit_FC(Main_window,
+                                                                          V_maximum_FC_alarm)).place(x=1525,
+                                                                                                     y=300)
+    # ---- Minimum SPO2 -----
+    Slide_minimum_SPO2_alarm = Scale(Alarms_settings, orient=HORIZONTAL, width=50, from_=1, to=100, length=350,
+                                     resolution=1, label="Minimum SPO2 (%) ", font=("Arial", 12),
+                                     variable=V_minimum_SPO2_alarm).place(x=1400, y=400)
+    Button_minimum_SPO2_alarm = Button(Alarms_settings, text="Save", borderwidth=2, height=4, width=10,
+                                      command=lambda: Save_minimum_unit_SPO2(Main_window,
+                                                                             V_minimum_SPO2_alarm)).place(x=1525,
+                                                                                                          y=500)
+    
+
+# -------------------------------------------------------------------------------------------------------------
+def Save_maximum_unit_flow(Main_window, V_maximum_flow_alarm):
+    Show_maximum_flow = Label(Main_window, font=("Arial", 12),
+                              text="Maximum Flow\t\t " + str(V_maximum_flow_alarm.get())).place(x=400, y=770)
+    Show_maximum_unit_flow = Label(Main_window, font=("Arial", 12),
+                                   text="L/min").place(x=675, y=770)
+    Value_txt_flow_maxim = open("flow_alarm_maximum.txt", "w")
+    Value_txt_flow_maxim.write(str(V_maximum_flow_alarm.get()))
+    Value_txt_flow_maxim.close()
+
+
+def Save_minimum_unit_flow(Main_window, V_minimum_flow_alarm):
+    Show_minimum_flow = Label(Main_window, font=("Arial", 12),
+                              text="Minimum Flow\t\t " + str(V_minimum_flow_alarm.get())).place(x=400, y=800)
+    Show_minimum_unit_flow = Label(Main_window, font=("Arial", 12), text="L/min").place(x=675, y=800)
+    Value_txt_flow_minimum = open("flow_alarm_minimum.txt", "w")
+    Value_txt_flow_minimum.write(str(V_minimum_flow_alarm.get()))
+    Value_txt_flow_minimum.close()
+
+
+def Save_unit_pressure(Main_window, V_Pressure_alarm):
+    Show_pressure = Label(Main_window, font=("Arial", 12),
+                          text="Pressure\t\t\t " + str(V_Pressure_alarm.get())).place(x=400, y=830)
+    Show_unit_pressure = Label(Main_window, font=("Arial", 12), text="cmH2O").place(x=675, y=830)
+    Value_txt_pressure = open("Pressure_alarm.txt", "w")
+    Value_txt_pressure.write(str(V_Pressure_alarm.get()))
+    Value_txt_pressure.close()
+
+
+def Save_unit_O2(Main_window, V_maximum_O2_alarm):
+    Show_O2 = Label(Main_window, font=("Arial", 12),
+                    text="O2\t\t\t " + str(V_maximum_O2_alarm.get())).place(x=400, y=860)
+    Show_unit_O2 = Label(Main_window, font=("Arial", 12), text="O2 %").place(x=675, y=860)
+    Value_txt_O2 = open("O2_alarm.txt", "w")
+    Value_txt_O2.write(str(V_maximum_O2_alarm.get()))
+    Value_txt_O2.close()
+
+
+def Save_maximum_unit_volume(Main_window, V_maximum_volume_alarm):
+    Show_maximum_volume = Label(Main_window, font=("Arial", 12),
+                                text="VT Maximum\t\t " + str(V_maximum_volume_alarm.get())).place(x=400, y=890)
+    Show_maximum_unit_volume = Label(Main_window, font=("Arial", 12),
+                                     text="mL").place(x=675, y=890)
+    Value_txt_volume_maximum = open("volume_alarm_maximum.txt", "w")
+    Value_txt_volume_maximum.write(str(V_maximum_volume_alarm.get()))
+    Value_txt_volume_maximum.close()
+
+
+def Save_minimum_unit_volume(Main_window, V_minimum_volume_alarm):
+    Show_minimum_volume = Label(Main_window, font=("Arial", 12),
+                                text="VT Minimum\t\t " + str(V_minimum_volume_alarm.get())).place(x=400, y=920)
+    Show_minimum_unit_volume = Label(Main_window, font=("Arial", 12),
+                                     text="mL").place(x=675, y=920)
+    Value_txt_volume_minimum = open("volume_alarm_minimum.txt", "w")
+    Value_txt_volume_minimum.write(str(V_minimum_volume_alarm.get()))
+    Value_txt_volume_minimum.close()
+
+
+def Save_maximum_unit_FC(Main_window, V_maximum_FC_alarm):
+    Show_maximum_FC = Label(Main_window, font=("Arial", 12),
+                            text="PPM   Maximum\t\t " + str(V_maximum_FC_alarm.get())).place(x=400,
+                                                                                             y=950)
+    Show_maximum_unit_FC = Label(Main_window, font=("Arial", 12), text="PPM").place(x=675, y=950)
+    Value_txt_FC = open("Alarm_FC.txt", "w")
+    Value_txt_FC.write(str(V_maximum_FC_alarm.get()))
+    Value_txt_FC.close()
+
+
+def Save_minimum_unit_SPO2(Main_window, V_minimum_SPO2_alarm):
+    Show_minimum_O2_volume = Label(Main_window, font=("Arial", 12),
+                                   text="SPO2 Minimum\t\t " + str(V_minimum_SPO2_alarm.get())).place(x=400,
+                                                                                                     y=980)
+    Show_minimum_unit_O2 = Label(Main_window, font=("Arial", 12),
+                                 text="%").place(x=675, y=980)
+    Value_txt_O2 = open("Alarm_SPO2.txt", "w")
+    Value_txt_O2.write(str(V_minimum_SPO2_alarm.get()))
+    Value_txt_O2.close()
+
+
+# ----------------------------------------------------------------
+def show_display(Main_window):
+    mx30 = MAX30100.MAX30100()
+    mx30.enable_spo2()
+    while 1:
+        f_oxygen = open("Alarm_SPO2.txt", "r")
+        f_PPM = open("Alarm_FC.txt", "r")
+        Value_Satu = int(f_oxygen.read())
+        Value_PPM = int(f_PPM.read())
+        mx30.read_sensor()
+        mx30.ir, mx30.red
+        hb = int(mx30.ir / 100)
+        spo2 = int(mx30.red / 100)
+        if mx30.ir != mx30.buffer_ir:
+            if spo2 <= 99:
+                Show_Spo2 = Label(Main_window, font=("Arial", 50), text=str(spo2)).place(x=150, y=175)
+                if spo2 > Value_Satu:
+                    GPIO.output(11, True)
+                    GPIO.output(19, False)
+                  
+                else:
+                    GPIO.output(11, False)
+                    GPIO.output(19, True)
+                    
+        if mx30.red != mx30.buffer_red:
+            if hb < 150:
+                Show_pulse = Label(Main_window, font=("Arial", 50), text=str(hb)).place(x=150, y=520)
+                if 40 < hb <= Value_PPM:
+                    GPIO.output(7, True)
+                    GPIO.output(18, False)
+                    
+                else:
+                    GPIO.output(7, False)
+                    GPIO.output(18, True)
+        time.sleep(0.1)         
+        f_oxygen.close()
+        f_PPM.close()
+        
+
+
+def Serial_Handle(Main_window):
+    global Data
+    global Serial_Data
+
+    while 1:
+        #time.sleep(0.1)
+        Serial_Data.reset_input_buffer()
+        Data = str((Serial_Data.readline().decode('utf-8')))
+        
+        f_Flow_maximum = open("flow_alarm_maximum.txt", "r")
+        Value_flow_maximum = int(f_Flow_maximum.read())
+        f_Flow_minimum = open("flow_alarm_minimum.txt", "r")
+        Value_flow_minimum = int(f_Flow_minimum.read())
+        f_O2 = open("O2_alarm.txt", "r")
+        Value_O2 = int(f_O2.read())
+        f_Pressure = open("Pressure_alarm.txt", "r")
+        Value_data_Pressure = int(f_Pressure.read())
+        f_volume_maximum = open("volume_alarm_maximum.txt", "r")
+        Value_volume_maximum = int(f_volume_maximum.read())
+        f_volume_minimum = open("volume_alarm_minimum.txt", "r")
+        Value_volume_minimum = int(f_volume_minimum.read())
+
+        
+        Data_max = len(Data)
+        if Data[0] == "D":
+            if Data[1] == "P":
+                Value_pressure = int(Data[2:Data_max])
+                show_Pressure = Label(Main_window, font=("Arial", 50), text= str(Value_pressure)).place(x=1275,
+                                                                                                        y=175)
+                if 1 <= Value_pressure <= Value_data_Pressure:   
+                    GPIO.output(15, True)
+                    GPIO.output(23, False)
+                    
+                else:
+                    GPIO.output(15, False)
+                    GPIO.output(23, True)
+                    
+
+            if Data[1] == "F":
+                Value_flow = int(Data[2:Data_max])
+                print(Value_flow)
+                Show_Flow = Label(Main_window, font=("Arial", 50), text=str(Value_flow)).place(x=725, y=175)
+                if Value_volume_minimum <= Value_flow <= Value_volume_maximum:
+                    GPIO.output(12, True)
+                    GPIO.output(21, False)
+                else:
+                    GPIO.output(12, False)
+                    GPIO.output(21, True)
+                    
+            if Data[1] == "V":
+                Value_volume = int(Data[2:Data_max])
+                print(Value_volume)
+                Show_Volume = Label(Main_window, font=("Arial", 50), text=str(Value_volume)).place(x=700, y=520)
+                if Value_volume_minimum < Value_volume < Value_volume_maximum:
+                    GPIO.output(13, True)
+                    GPIO.output(22, False)
+                    
+                else:
+                    GPIO.output(13, False)
+                    GPIO.output(22, True)
+                    
+            if Data[1] == "O":
+                Value_oxygen = int(Data[2:Data_max])
+                Show_O2 = Label(Main_window, font=("Arial", 50), text=str(Value_oxygen)).place(x=1275, y=520)
+                
+                if 21 < Value_oxygen < Value_O2:
+                    GPIO.output(16, True)
+                    GPIO.output(24, False)
+                    
+                else:
+                    GPIO.output(16, False)
+                    GPIO.output(24, True)
+                    
+        
+        f_O2.close()
+        f_Pressure.close()
+        f_Flow_maximum.close()
+        f_Flow_minimum.close()
+        f_volume_minimum.close()
+        f_volume_maximum.close()
+
+def graphic_display():
+    global Serial_Data
+    try:
+        Serial_Data = serial.Serial('/dev/ttyACM0', 9600)
+        #print("Hello +++++")
+    except:
+        print("Connection failed")
+
+    Main_window = Tk()
+    Main_window.title('Parameter Monitoring ')
+    Main_window.geometry("2048x1080")
+
+
+    # ---- Variables Parameters ------
+    Variable_Oxygen = IntVar()
+    # ----- Variables Alarms -------
+    V_maximum_flow_alarm = IntVar()
+    V_minimum_flow_alarm = IntVar()
+    V_Pressure_alarm = IntVar()
+    V_maximum_volume_alarm = IntVar()
+    V_minimum_volume_alarm = IntVar()
+    V_maximum_FC_alarm = IntVar()
+    V_minimum_SPO2_alarm = IntVar()
+    V_maximum_O2_alarm = IntVar()
+    Name_person = StringVar()
+    Apellido_1 = StringVar()
+    Apellido_2 = StringVar()
+    Sexo = StringVar()
+    Edad = StringVar()
+    # Canvas
+    Rec_Parameters = Canvas(Main_window, width=2048, height=1080)
+    Rec_Parameters.pack()
+
+    Label_Alarm = Label(Main_window, text="Configured alarms", font=("Arial", 12)).place(x=525, y=725)
+    Rec_Parameters.create_line(375, 1010, 800, 1010)
+    Rec_Parameters.create_line(375, 750, 800, 750)
+    Rec_Parameters.create_line(375, 1050, 375, 750)
+    Rec_Parameters.create_line(800, 1050, 800, 750)
+    Label_Data_Spo2 = Label(Main_window, text="Spo2", font=("Arial", 32)).place(x=150, y=30)
+    Rec_Parameters.create_line(80, 100, 350, 100)
+    Rec_Parameters.create_line(80, 350, 350, 350)
+    Rec_Parameters.create_line(350, 350, 350, 100)
+    Rec_Parameters.create_line(80, 350, 80, 100)
+    Label_Data_PPM = Label(Main_window, text="PPM", font=("Arial", 32)).place(x=150, y=390)
+    Rec_Parameters.create_line(80, 450, 350, 450)
+    Rec_Parameters.create_line(80, 700, 350, 700)
+    Rec_Parameters.create_line(350, 700, 350, 450)
+    Rec_Parameters.create_line(80, 700, 80, 450)
+
+    Label_Data_Flow = Label(Main_window, text="Flow L/min", font=("Arial", 32)).place(x=675, y=30)
+    Rec_Parameters.create_line(650, 100, 920, 100)
+    Rec_Parameters.create_line(650, 350, 920, 350)
+    Rec_Parameters.create_line(920, 100, 920, 350)
+    Rec_Parameters.create_line(650, 350, 650, 100)
+
+    Label_Data_Volume = Label(Main_window, text="Volume mL", font=("Arial", 32)).place(x=675, y=390)
+    Rec_Parameters.create_line(650, 450, 920, 450)
+    Rec_Parameters.create_line(650, 700, 920, 700)
+    Rec_Parameters.create_line(920, 450, 920, 700)
+    Rec_Parameters.create_line(650, 700, 650, 450)
+
+    Label_Data_Pressure = Label(Main_window, text="Pressure cmH2O", font=("Arial", 32)).place(x=1175, y=30)
+    Rec_Parameters.create_line(1200, 100, 1470, 100)
+    Rec_Parameters.create_line(1200, 350, 1470, 350)
+    Rec_Parameters.create_line(1470, 100, 1470, 350)
+    Rec_Parameters.create_line(1200, 350, 1200, 100)
+
+    Label_Data_O2 = Label(Main_window, text="O2 (%)", font=("Arial", 32)).place(x=1300, y=390)
+    Rec_Parameters.create_line(1200, 450, 1470, 450)
+    Rec_Parameters.create_line(1200, 700, 1470, 700)
+    Rec_Parameters.create_line(1470, 450, 1470, 700)
+    Rec_Parameters.create_line(1200, 700, 1200, 450)
+
+    # -----------------------------------
+
+    Button_alarms = Button(Main_window, text="Alarms and settings", borderwidth=2, height=5, width=20,
+                           command=lambda: Parameters_alarms(Main_window, V_maximum_flow_alarm,
+                                                             V_minimum_flow_alarm, V_Pressure_alarm,
+                                                             V_maximum_volume_alarm,
+                                                             V_minimum_volume_alarm,
+                                                             V_maximum_FC_alarm,
+                                                             V_minimum_SPO2_alarm, V_maximum_O2_alarm)).place(x=80,
+                                                                                                              y=900)
+
+    Button_close = Button(Main_window, text="Close", borderwidth=2, height=5, width=20,
+                          command=lambda: Main_window.destroy()).place(x=900, y=900)
+
+    Sensors_SPO2_FC = Thread(target=lambda: show_display(Main_window))
+    Data_s = Thread(target=lambda: Serial_Handle(Main_window))
+    Sensors_SPO2_FC.start()
+    Data_s.start()
+    image_EUSS = PhotoImage(file="EUSS_2.png")
+    imagen = Label(Main_window, image=image_EUSS).place(x=1200, y=800)
+    
+    Etiqueta1 = Label(Main_window, text="Nombre: ", font=("Arial", 14)).place(x=1500, y=400)
+    Nombre_caja = Entry(Main_window, text=Name_person, font=("Arial", 14)).place(x=1650, y=400)
+    Etiqueta2 = Label(Main_window, text="Primer apellido: ", font=("Arial", 14)).place(x=1500, y=450)
+    Primer_apellido = Entry(Main_window, text=Apellido_1, font=("Arial", 14)).place(x=1650, y=450)
+    Etiqueta3 = Label(Main_window, text="Segundo apellido: ", font=("Arial", 14)).place(x=1500, y=500)
+    Segundo_apellido = Entry(Main_window, text=Apellido_2, font=("Arial", 14)).place(x=1650, y=500)
+    Etiqueta4 = Label(Main_window, text="Edad: ", font=("Arial", 14)).place(x=1500, y=550)
+    Edad_paciente = Entry(Main_window, text=Edad, font=("Arial", 14)).place(x=1650, y=550)
+    Etiqueta_5 = Label(Main_window, text="Sexo: ", font=("Arial", 14)).place(x=1500, y=600)
+    Sexo_paciente = Entry(Main_window, text=Sexo, font=("Arial", 14)).place(x=1650, y=600)
+    Main_window.mainloop()
+    Sensors_SPO2_FC.join()
+    Data_s.join()
+
+
+graph = Thread(target=graphic_display)
+graph.start()
+graph.join()
